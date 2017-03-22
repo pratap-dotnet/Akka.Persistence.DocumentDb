@@ -1,4 +1,6 @@
-﻿namespace Akka.Persistence.DocumentDb.Snapshot
+﻿using Newtonsoft.Json;
+
+namespace Akka.Persistence.DocumentDb.Snapshot
 {
     public class SnapshotEntry
     {
@@ -15,7 +17,7 @@
         {
 
         }
-
+        [JsonProperty("id")]
         public string Id { get; set; }
         public string PersistenceId { get; set; }
         public long SequenceNr { get; set; }

@@ -54,13 +54,12 @@ namespace Akka.Persistence.DocumentDb.Journal
             journalCollection = new Lazy<DocumentCollection>(() =>
             {
                 var documentDbName = documentDbDatabase.Value.Id;
-                var documentCollection = documentClient.Value.CreateDocumentCollectionQuery
-                    (UriFactory.CreateDatabaseUri(documentDbName))
+                var documentCollection = documentClient.Value.CreateDocumentCollectionQuery(documentDbDatabase.Value.SelfLink)
                     .Where(a => a.Id == settings.Collection).AsEnumerable().FirstOrDefault();
                 if (documentCollection == null && settings.AutoInitialize)
                 {
                     documentCollection = documentClient.Value
-                        .CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(documentDbName),
+                        .CreateDocumentCollectionAsync(documentDbDatabase.Value.SelfLink,
                     new DocumentCollection
                     {
                         Id = settings.Collection
@@ -79,12 +78,12 @@ namespace Akka.Persistence.DocumentDb.Journal
                 var documentDbName = documentDbDatabase.Value.Id;
 
                 var collection = documentClient.Value.CreateDocumentCollectionQuery
-                    (UriFactory.CreateDatabaseUri(documentDbName))
+                    (documentDbDatabase.Value.SelfLink)
                     .Where(a => a.Id == settings.MetadataCollection).AsEnumerable().FirstOrDefault();
                 if (collection == null && settings.AutoInitialize)
                 {
                     collection = documentClient.Value.
-                        CreateDocumentCollectionAsync(UriFactory.CreateDatabaseUri(documentDbName),
+                        CreateDocumentCollectionAsync(documentDbDatabase.Value.SelfLink,
                     new DocumentCollection
                     {
                         Id = settings.MetadataCollection
@@ -99,28 +98,42 @@ namespace Akka.Persistence.DocumentDb.Journal
             });
         }
 
-        public override Task<long> ReadHighestSequenceNrAsync(string persistenceId, long fromSequenceNr)
+        public override async Task<long> ReadHighestSequenceNrAsync(string persistenceId, long fromSequenceNr)
         {
-            IQueryable<MetadataEntry> query = GetMetadataEntryQuery()
-                .Where(a => a.PersistenceId == persistenceId);
-
-            return Task.FromResult(query.FirstOrDefault().SequenceNr);
+            var documentLink = UriFactory.CreateDocumentUri(documentDbDatabase.Value.Id, metadataCollection.Value.Id, persistenceId);
+            try
+            {
+                var document = await documentClient.Value.ReadDocumentAsync(documentLink);
+                return ((MetadataEntry)((dynamic)document.Resource)).SequenceNr;
+            }
+            catch (DocumentClientException ex)
+            {
+                return 0;
+            }
+            
         }
 
         public override Task ReplayMessagesAsync(IActorContext context, string persistenceId, long fromSequenceNr, long toSequenceNr, long max, Action<IPersistentRepresentation> recoveryCallback)
         {
-            if (max == 0)
-                return Task.FromResult(0);
+            // Limit allows only integer
+            var limitValue = max >= int.MaxValue ? int.MaxValue : (int)max;
+
+            // Do not replay messages if limit equal zero
+            if (limitValue == 0)
+                return Task.FromResult(false);
+
             IQueryable<JournalEntry> query = GetJournalEntryQuery()
                 .Where(a => a.PersistenceId == persistenceId 
                             && a.SequenceNr >= fromSequenceNr 
-                            && a.SequenceNr <= toSequenceNr); 
+                            && a.SequenceNr <= toSequenceNr)
+                .OrderBy(a=> a.SequenceNr)
+                .Take(limitValue); 
 
             var documents = query.ToList();
 
             documents.ForEach(doc =>
             {
-                recoveryCallback(new Persistent(doc.Payload, doc.SequenceNr, doc.PersistenceId, doc.Manifest, doc.IsDeleted, Sender));
+                recoveryCallback(new Persistent(doc.Payload, doc.SequenceNr, doc.PersistenceId, doc.Manifest, doc.IsDeleted, context.Sender));
             });
 
             return Task.FromResult(0);
@@ -128,14 +141,12 @@ namespace Akka.Persistence.DocumentDb.Journal
 
         private IQueryable<JournalEntry> GetJournalEntryQuery()
         {
-            return documentClient.Value.CreateDocumentQuery<JournalEntry>(
-                            UriFactory.CreateDocumentCollectionUri(documentDbDatabase.Value.Id, journalCollection.Value.Id), new FeedOptions { MaxItemCount = -1 });
+            return documentClient.Value.CreateDocumentQuery<JournalEntry>( journalCollection.Value.SelfLink, new FeedOptions { MaxItemCount = -1 });
         }
 
         private IQueryable<MetadataEntry> GetMetadataEntryQuery()
         {
-            return documentClient.Value.CreateDocumentQuery<MetadataEntry>(
-                            UriFactory.CreateDocumentCollectionUri(documentDbDatabase.Value.Id, metadataCollection.Value.Id), new FeedOptions { MaxItemCount = -1 });
+            return documentClient.Value.CreateDocumentQuery<MetadataEntry>(metadataCollection.Value.SelfLink, new FeedOptions { MaxItemCount = -1 });
         }
 
         protected override async Task DeleteMessagesToAsync(string persistenceId, long toSequenceNr)
@@ -164,7 +175,7 @@ namespace Akka.Persistence.DocumentDb.Journal
                 var journalEntries = persistentMessages.Select(a => new JournalEntry(a)).ToList();
 
                 var induvidualWriteTasks = journalEntries.Select(async a => await documentClient.Value.CreateDocumentAsync(journalCollection.Value.SelfLink, a));
-                await Task.WhenAll(induvidualWriteTasks);
+                return await Task.WhenAll(induvidualWriteTasks.ToArray());
             });
 
             await SetHighestSequenceId(messageList);
@@ -180,9 +191,7 @@ namespace Akka.Persistence.DocumentDb.Journal
         {
             var persistenceId = messages.Select(c => c.PersistenceId).First();
             var highSequenceId = messages.Max(c => c.HighestSequenceNr);
-            IQueryable<MetadataEntry> query = GetMetadataEntryQuery()
-                .Where(a => a.PersistenceId == persistenceId);
-
+            
             var metadataEntry = new MetadataEntry
             {
                 Id = persistenceId,
@@ -190,8 +199,7 @@ namespace Akka.Persistence.DocumentDb.Journal
                 SequenceNr = highSequenceId
             };
 
-            await documentClient.Value.UpsertDocumentAsync(
-                UriFactory.CreateDocumentCollectionUri(documentDbDatabase.Value.Id, metadataCollection.Value.Id), metadataEntry);
+            await documentClient.Value.UpsertDocumentAsync(metadataCollection.Value.SelfLink, metadataEntry);
         }
     }
 }
