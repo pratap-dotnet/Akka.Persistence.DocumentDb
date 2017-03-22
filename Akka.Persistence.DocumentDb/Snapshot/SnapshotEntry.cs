@@ -7,7 +7,7 @@ namespace Akka.Persistence.DocumentDb.Snapshot
         public SnapshotEntry(SnapshotMetadata metadata, object snapshot)
         {
             Snapshot = snapshot;
-            Id = $"{metadata.PersistenceId}-{metadata.SequenceNr}";
+            Id = $"{metadata.PersistenceId}_{metadata.SequenceNr}";
             SequenceNr = metadata.SequenceNr;
             Timestamp = metadata.Timestamp.Ticks;
             PersistenceId = metadata.PersistenceId;

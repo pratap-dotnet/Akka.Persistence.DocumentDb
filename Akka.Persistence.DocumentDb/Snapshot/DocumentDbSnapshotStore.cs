@@ -90,8 +90,7 @@ namespace Akka.Persistence.DocumentDb.Snapshot
 
         protected override async Task DeleteAsync(SnapshotMetadata metadata)
         {
-            IQueryable<SnapshotEntry> query = documentClient.Value.CreateDocumentQuery<SnapshotEntry>(
-                UriFactory.CreateDocumentCollectionUri(documentDbDatabase.Value.Id, snapShotCollection.Value.Id));
+            IQueryable<SnapshotEntry> query = documentClient.Value.CreateDocumentQuery<SnapshotEntry>(snapShotCollection.Value.SelfLink);
 
             query = query.Where(a => a.PersistenceId == metadata.PersistenceId);
 
@@ -99,9 +98,9 @@ namespace Akka.Persistence.DocumentDb.Snapshot
                 query = query.Where(a => a.SequenceNr == metadata.SequenceNr);
 
             if (metadata.Timestamp != DateTime.MinValue && metadata.Timestamp != DateTime.MaxValue)
-                query = query.Where(a => a.Timestamp == metadata.Timestamp.Ticks);
+                query = query.Where(a => a.Timestamp == metadata.Timestamp.Ticks.ToString());
 
-            var document = query.FirstOrDefault();
+            var document = query.ToList().FirstOrDefault();
 
             if (document != null)
                 await documentClient.Value.DeleteDocumentAsync(
@@ -111,8 +110,8 @@ namespace Akka.Persistence.DocumentDb.Snapshot
         protected override async Task DeleteAsync(string persistenceId, SnapshotSelectionCriteria criteria)
         {
             var query = GetSnapshotQuery(persistenceId, criteria);
-
-            var deleteTasks = query.ToList().Select(async a =>
+            var documents = query.ToList();
+            var deleteTasks = documents.Select(async a =>
             {
                 await documentClient.Value.DeleteDocumentAsync(
                     UriFactory.CreateDocumentUri(documentDbDatabase.Value.Id, snapShotCollection.Value.Id, a.Id));
@@ -124,22 +123,20 @@ namespace Akka.Persistence.DocumentDb.Snapshot
         protected override Task<SelectedSnapshot> LoadAsync(string persistenceId, SnapshotSelectionCriteria criteria)
         {
             var query = GetSnapshotQuery(persistenceId, criteria);
-
-            return Task.FromResult(query
+            var result = query
                     .OrderByDescending(a => a.SequenceNr)
+                    .ToList()//DocumentDb doesnt allow constructor invocation
                     .Select(a => new SelectedSnapshot(new SnapshotMetadata(a.PersistenceId, a.SequenceNr, new DateTime(a.Timestamp)), a.Snapshot))
-                    .FirstOrDefault()
-                );
+                    .FirstOrDefault();
+            return Task.FromResult(result);
         }
 
-        protected override Task SaveAsync(SnapshotMetadata metadata, object snapshot)
+        protected override async Task SaveAsync(SnapshotMetadata metadata, object snapshot)
         {
             var snapshotEntry = new SnapshotEntry(metadata, snapshot);
 
-            documentClient.Value.UpsertDocumentAsync(
-                UriFactory.CreateDocumentUri(documentDbDatabase.Value.Id, snapShotCollection.Value.Id, snapshotEntry.Id), snapshotEntry);
-
-            return Task.FromResult(true);
+            await documentClient.Value.UpsertDocumentAsync( snapShotCollection.Value.SelfLink, snapshotEntry);
         }
+
     }
 }
