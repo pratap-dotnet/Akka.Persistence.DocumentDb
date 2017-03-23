@@ -9,7 +9,7 @@ namespace Akka.Persistence.DocumentDb.Snapshot
             Snapshot = snapshot;
             Id = $"{metadata.PersistenceId}_{metadata.SequenceNr}";
             SequenceNr = metadata.SequenceNr;
-            Timestamp = metadata.Timestamp.Ticks;
+            Timestamp = new DateTimeJsonObject(metadata.Timestamp);
             PersistenceId = metadata.PersistenceId;
         }
 
@@ -21,7 +21,7 @@ namespace Akka.Persistence.DocumentDb.Snapshot
         public string Id { get; set; }
         public string PersistenceId { get; set; }
         public long SequenceNr { get; set; }
-        public long Timestamp { get; set; }
+        public DateTimeJsonObject Timestamp { get; set; }
         public object Snapshot { get; set; }
     }
 }

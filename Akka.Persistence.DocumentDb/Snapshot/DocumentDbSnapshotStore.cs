@@ -83,7 +83,12 @@ namespace Akka.Persistence.DocumentDb.Snapshot
                 query = query.Where(a => a.SequenceNr <= criteria.MaxSequenceNr);
 
             if (criteria.MaxTimeStamp != DateTime.MinValue && criteria.MaxTimeStamp != DateTime.MaxValue)
-                query = query.Where(a => a.Timestamp <= criteria.MaxTimeStamp.Ticks);
+            {
+                var dateTimeAsJson = new DateTimeJsonObject(criteria.MaxTimeStamp);
+                query = query.Where(a => a.Timestamp.Date < dateTimeAsJson.Date || 
+                    a.Timestamp.Ticks <= dateTimeAsJson.Ticks);
+            }
+                
 
             return query;
         }
@@ -98,7 +103,10 @@ namespace Akka.Persistence.DocumentDb.Snapshot
                 query = query.Where(a => a.SequenceNr == metadata.SequenceNr);
 
             if (metadata.Timestamp != DateTime.MinValue && metadata.Timestamp != DateTime.MaxValue)
-                query = query.Where(a => a.Timestamp == metadata.Timestamp.Ticks.ToString());
+            {
+                var dateTimeAsJson = new DateTimeJsonObject(metadata.Timestamp);
+                query = query.Where(a => a.Timestamp.Date == dateTimeAsJson.Date && a.Timestamp.Ticks == dateTimeAsJson.Ticks);
+            }   
 
             var document = query.ToList().FirstOrDefault();
 
@@ -126,7 +134,8 @@ namespace Akka.Persistence.DocumentDb.Snapshot
             var result = query
                     .OrderByDescending(a => a.SequenceNr)
                     .ToList()//DocumentDb doesnt allow constructor invocation
-                    .Select(a => new SelectedSnapshot(new SnapshotMetadata(a.PersistenceId, a.SequenceNr, new DateTime(a.Timestamp)), a.Snapshot))
+                    .Select(a => new SelectedSnapshot(new SnapshotMetadata(a.PersistenceId, a.SequenceNr, 
+                            a.Timestamp.ToDateTime()), a.Snapshot))
                     .FirstOrDefault();
             return Task.FromResult(result);
         }
