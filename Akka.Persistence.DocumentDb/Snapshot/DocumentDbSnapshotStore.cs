@@ -14,11 +14,21 @@ namespace Akka.Persistence.DocumentDb.Snapshot
         private Lazy<Database> documentDbDatabase;
         private Lazy<DocumentCollection> snapShotCollection;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DocumentDbSnapshotStore"/> class.
+        /// </summary>
         public DocumentDbSnapshotStore()
         {
             settings = DocumentDbPersistence.Get(Context.System).SnapshotStoreSettings;
         }
 
+        /// <summary>
+        /// User overridable callback.
+        /// <p />
+        /// Is called when an Actor is started.
+        /// Actors are automatically started asynchronously when created.
+        /// Empty default implementation.
+        /// </summary>
         protected override void PreStart()
         {
             base.PreStart();
@@ -74,8 +84,7 @@ namespace Akka.Persistence.DocumentDb.Snapshot
 
         private IQueryable<SnapshotEntry> GetSnapshotQuery(string persistenceId, SnapshotSelectionCriteria criteria)
         {
-            IQueryable<SnapshotEntry> query = documentClient.Value.CreateDocumentQuery<SnapshotEntry>(
-                UriFactory.CreateDocumentCollectionUri(documentDbDatabase.Value.Id, snapShotCollection.Value.Id));
+            IQueryable<SnapshotEntry> query = documentClient.Value.CreateDocumentQuery<SnapshotEntry>(snapShotCollection.Value.SelfLink);
 
             query = query.Where(a => a.PersistenceId == persistenceId);
 
@@ -93,9 +102,18 @@ namespace Akka.Persistence.DocumentDb.Snapshot
             return query;
         }
 
+        /// <summary>
+        /// Deletes the snapshot identified by <paramref name="metadata" />.
+        /// This call is protected with a circuit-breaker
+        /// </summary>
+        /// <param name="metadata">TBD</param>
+        /// <returns>
+        /// TBD
+        /// </returns>
         protected override async Task DeleteAsync(SnapshotMetadata metadata)
         {
-            IQueryable<SnapshotEntry> query = documentClient.Value.CreateDocumentQuery<SnapshotEntry>(snapShotCollection.Value.SelfLink);
+            IQueryable<SnapshotEntry> query = documentClient.Value.CreateDocumentQuery<SnapshotEntry>
+                (snapShotCollection.Value.SelfLink);
 
             query = query.Where(a => a.PersistenceId == metadata.PersistenceId);
 
@@ -115,6 +133,15 @@ namespace Akka.Persistence.DocumentDb.Snapshot
                     UriFactory.CreateDocumentUri(documentDbDatabase.Value.Id, snapShotCollection.Value.Id, document.Id));
         }
 
+        /// <summary>
+        /// Deletes all snapshots matching provided <paramref name="criteria" />.
+        /// This call is protected with a circuit-breaker
+        /// </summary>
+        /// <param name="persistenceId">persistenceId</param>
+        /// <param name="criteria">Criteria</param>
+        /// <returns>
+        /// TBD
+        /// </returns>
         protected override async Task DeleteAsync(string persistenceId, SnapshotSelectionCriteria criteria)
         {
             var query = GetSnapshotQuery(persistenceId, criteria);
@@ -128,6 +155,15 @@ namespace Akka.Persistence.DocumentDb.Snapshot
             await Task.WhenAll(deleteTasks.ToArray());
         }
 
+        /// <summary>
+        /// Asynchronously loads a snapshot.
+        /// This call is protected with a circuit-breaker
+        /// </summary>
+        /// <param name="persistenceId">PersistenceId</param>
+        /// <param name="criteria">Selection criteria</param>
+        /// <returns>
+        /// TBD
+        /// </returns>
         protected override Task<SelectedSnapshot> LoadAsync(string persistenceId, SnapshotSelectionCriteria criteria)
         {
             var query = GetSnapshotQuery(persistenceId, criteria);
@@ -140,6 +176,15 @@ namespace Akka.Persistence.DocumentDb.Snapshot
             return Task.FromResult(result);
         }
 
+        /// <summary>
+        /// Asynchronously saves a snapshot.
+        /// This call is protected with a circuit-breaker
+        /// </summary>
+        /// <param name="metadata">Metadata</param>
+        /// <param name="snapshot">snapshot</param>
+        /// <returns>
+        /// TBD
+        /// </returns>
         protected override async Task SaveAsync(SnapshotMetadata metadata, object snapshot)
         {
             var snapshotEntry = new SnapshotEntry(metadata, snapshot);

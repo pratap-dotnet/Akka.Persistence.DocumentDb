@@ -2,6 +2,9 @@
 
 namespace Akka.Persistence.DocumentDb.Snapshot
 {
+    /// <summary>
+    /// DocumentDb document storing the snapshot
+    /// </summary>
     public class SnapshotEntry
     {
         public SnapshotEntry(SnapshotMetadata metadata, object snapshot)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,15 +21,21 @@ namespace Akka.Persistence.DocumentDb.Tests
                     plugin = ""akka.persistence.snapshot-store.documentdb""
                     documentdb {
                         class = ""Akka.Persistence.DocumentDb.Snapshot.DocumentDbSnapshotStore, Akka.Persistence.DocumentDb""
-                        service-uri = ""https://localhost:8081""
-                        secret-key = ""C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==""
+                        service-uri = ""<serviceUri>""
+                        secret-key = ""<secretKey>""
                         auto-initialize = on
                         database = ""testactors""
                     }
                 }
             }";
 
-        public DocumentDbSnapshotStoreTests() : base(SpecConfig, "DocumentDbSnapshotStoreSpec")
+        public static string GetConfigSpec()
+        {
+            return SpecConfig.Replace("<serviceUri>", ConfigurationManager.AppSettings["serviceUri"])
+                .Replace("<secretKey>", ConfigurationManager.AppSettings["secretKey"]);
+        }
+
+        public DocumentDbSnapshotStoreTests() : base(GetConfigSpec(), "DocumentDbSnapshotStoreSpec")
         {
             Initialize();
         }

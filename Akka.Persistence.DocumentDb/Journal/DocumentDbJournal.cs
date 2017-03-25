@@ -18,11 +18,21 @@ namespace Akka.Persistence.DocumentDb.Journal
         private Lazy<DocumentCollection> journalCollection;
         private Lazy<DocumentCollection> metadataCollection;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DocumentDbJournal"/> class.
+        /// </summary>
         public DocumentDbJournal()
         {
             this.settings = DocumentDbPersistence.Get(Context.System).JournalSettings;
         }
 
+        /// <summary>
+        /// User overridable callback.
+        /// <p />
+        /// Is called when an Actor is started.
+        /// Actors are automatically started asynchronously when created.
+        /// Empty default implementation.
+        /// </summary>
         protected override void PreStart()
         {
             base.PreStart();
