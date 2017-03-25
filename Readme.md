@@ -1,3 +1,5 @@
+[![Build status](https://ci.appveyor.com/api/projects/status/6s71yrffjyne1eyk/branch/master?svg=true)](https://ci.appveyor.com/project/pratapbhaskar/akka-persistence-documentdb/branch/master)
+
 # Akka.Persistence.DocumentDb
 
 Akka persistent journal and snapshot store backed by Microsoft Azure DocumentDb.
