@@ -14,9 +14,9 @@ before_build:
 configuration: release
 build:
   verbosity: minimal
-test: off
-build_success: 
+after_build: 
     - ps: .\nuget\pack.ps1
+test: off
 artifacts:
   - path: Akka.Persistence.DocumentDb\bin\Release\Akka.Persistence.DocumentDb.dll
     name: Akka.Persistence.DocumentDb.dll
