@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+    <id>Akka.Persistence.DocumentDb</id>
+    <version>$version$</version>
+    <title>Akka.Persistence.DocumentDb</title>
+    <authors>Pratap Bhaskar</authors>
+    <owners>Pratap Bhaskar</owners>
+    <description>Akka.NET Persistence journal and snapshot store backed by DocumentDb.</description>
+    <licenseUrl>https://choosealicense.com/licenses/mit/</licenseUrl>
+    <projectUrl>https://github.com/pratapbhaskar/Akka.Persistence.DocumentDb</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <tags>persistence eventsource documentdb akka</tags>
+  </metadata>
+</package>
