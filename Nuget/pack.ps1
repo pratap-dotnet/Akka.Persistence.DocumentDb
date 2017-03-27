@@ -9,4 +9,4 @@ $content = $content -replace '\$version\$',$versionStr
 
 $content | Out-File $root\nuget\Akka.Persistence.DocumentDb.compiled.nuspec
 
-& $root\NuGet\NuGet.exe pack $root\nuget\Akka.Persistence.DocumentDb.compiled.nuspec
+& $root\NuGet\NuGet.exe pack $root\nuget\Akka.Persistence.DocumentDb.compiled.nuspec -OutputDirectory $root\Akka.Persistence.DocumentDb\bin\Release
