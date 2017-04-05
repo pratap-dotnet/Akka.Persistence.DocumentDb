@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.26228.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.Persistence.DocumentDb", "Akka.Persistence.DocumentDb\Akka.Persistence.DocumentDb.csproj", "{62D88FA1-BE5C-4DEF-8785-DFEC72111BC7}"
 EndProject
@@ -10,7 +10,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DFF72214-F509-4B31-9EC5-C9FC22329C2A}"
 	ProjectSection(SolutionItems) = preProject
 		appveyor.yml = appveyor.yml
-		pack.ps1 = pack.ps1
 		Readme.md = Readme.md
 	EndProjectSection
 EndProject

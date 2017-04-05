@@ -15,7 +15,7 @@ configuration: release
 build:
   verbosity: minimal
 after_build: 
-    - nuget pack Akka.Persistence.DocumentDb\Akka.Persistence.DocumentDb.csproj -properties configuration=release
+    - ps: .\nuget\pack.ps1
 test: off
 artifacts:
   - path: Akka.Persistence.DocumentDb\bin\Release\Akka.Persistence.DocumentDb.dll

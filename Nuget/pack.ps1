@@ -7,6 +7,6 @@ Write-Host "Setting .nuspec version tag to $versionStr"
 $content = (Get-Content $root\Akka.Persistence.DocumentDb\Akka.Persistence.DocumentDb.nuspec) 
 $content = $content -replace '\$version\$',$versionStr
 
-$content | Out-File $root\nuget\Akka.Persistence.DocumentDb.compiled.nuspec
+$content | Out-File $root\Akka.Persistence.DocumentDb\bin\Release\Akka.Persistence.DocumentDb.nuspec
 
-& $root\NuGet\NuGet.exe pack $root\nuget\Akka.Persistence.DocumentDb.compiled.nuspec -OutputDirectory $root\Akka.Persistence.DocumentDb\bin\Release
+& $root\NuGet\NuGet.exe pack $root\Akka.Persistence.DocumentDb\bin\Release\Akka.Persistence.DocumentDb.nuspec -OutputDirectory $root\Akka.Persistence.DocumentDb\bin\Release
