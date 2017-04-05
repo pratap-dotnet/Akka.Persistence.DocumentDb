@@ -76,7 +76,9 @@
     <Compile Include="Snapshot\SnapshotEntry.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Akka.Persistence.DocumentDb.nuspec" />
+    <None Include="Akka.Persistence.DocumentDb.nuspec">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="app.config" />
     <None Include="packages.config" />
     <EmbeddedResource Include="reference.conf" />

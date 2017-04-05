@@ -2,7 +2,7 @@
 <package xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <metadata xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
     <id>Akka.Persistence.DocumentDb</id>
-    <version>$version$</version>
+    <version>1.0.0-alpha</version>
     <title>Akka.Persistence.DocumentDb</title>
     <authors>Pratap Bhaskar</authors>
     <owners>Pratap Bhaskar</owners>
@@ -14,6 +14,7 @@
     <dependencies>
       <dependency id="Akka"/>
       <dependency id="Akka.Persistence" version="1.1.3.32-beta"/>
+      <dependency id="Microsoft.Azure.DocumentDb"/>
     </dependencies>
   </metadata>
 </package>
