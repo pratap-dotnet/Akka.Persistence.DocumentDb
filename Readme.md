@@ -2,8 +2,6 @@
 
 # Akka.Persistence.DocumentDb
 
-
-
 Akka persistent journal and snapshot store backed by Microsoft Azure DocumentDb.
 
 **Note: There is an official [Akka.Persistence.MongoDb](https://github.com/akkadotnet/Akka.Persistence.MongoDB) which might work with DocumentDb as well, since DocumentDb supports Mongo protocol.** 
